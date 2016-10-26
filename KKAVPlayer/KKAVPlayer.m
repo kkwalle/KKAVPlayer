@@ -235,10 +235,14 @@
 - (void)fullScreen {
     if (self.isFullscreenMode) {
         [UIView animateWithDuration:0.3f animations:^{
-            self.frame = self.originFrame;
             [self setTransform:CGAffineTransformIdentity];
+            self.frame = self.originFrame;
         } completion:^(BOOL finished) {
             self.isFullscreenMode = NO;
+            if ([self.superview isKindOfClass:[UITableView class]]) {
+                UITableView *tableView = (UITableView *)self.superview;
+                tableView.scrollEnabled = YES;
+            }
         }];
     } else {
         self.originFrame = self.frame;
@@ -248,8 +252,13 @@
         [UIView animateWithDuration:0.3f animations:^{
             self.frame = frame;
             [self setTransform:CGAffineTransformMakeRotation(M_PI_2)];
+            [[UIApplication sharedApplication].keyWindow bringSubviewToFront:self];
         } completion:^(BOOL finished) {
             self.isFullscreenMode = YES;
+            if ([self.superview isKindOfClass:[UITableView class]]) {
+                UITableView *tableView = (UITableView *)self.superview;
+                tableView.scrollEnabled = NO;
+            }
         }];
     }
 }
