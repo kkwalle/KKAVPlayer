@@ -186,7 +186,7 @@
     self.stateButton.frame = CGRectMake(0, 0, buttonWidth, buttonWidth);
     self.progressTimeLabel.frame = CGRectMake(CGRectGetMaxX(self.stateButton.frame), CGRectGetMinY(self.stateButton.frame), timeLabelWidth, CGRectGetHeight(self.stateButton.frame));
     self.videoProgress.frame = CGRectMake(CGRectGetMaxX(self.progressTimeLabel.frame), CGRectGetMidY(self.progressTimeLabel.frame)-2, self.bounds.size.width-CGRectGetMaxX(self.progressTimeLabel.frame)*2, 4);
-    self.videoSlider.frame = self.videoProgress.frame;
+    self.videoSlider.frame = CGRectMake(CGRectGetMinX(self.videoProgress.frame), 0, CGRectGetWidth(self.videoProgress.frame), CGRectGetHeight(self.bottomBar.frame));
     self.totalTimeLabel.frame = CGRectMake(CGRectGetMaxX(self.videoProgress.frame), CGRectGetMinY(self.progressTimeLabel.frame), timeLabelWidth, CGRectGetHeight(self.progressTimeLabel.frame));
     self.fullScreenButton.frame = CGRectMake(CGRectGetMaxX(self.totalTimeLabel.frame), CGRectGetMinY(self.stateButton.frame), buttonWidth, buttonWidth);
 }
