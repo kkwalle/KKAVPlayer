@@ -38,6 +38,12 @@
 @property (nonatomic, assign) BOOL played;
 @property (nonatomic, assign) BOOL showBottomBar;
 @property (nonatomic, assign) CGRect originFrame;
+@property (nonatomic, assign) BOOL isFullscreenMode;
+
+//容器,url,
+@property (nonatomic, strong) UIView *containerView;
+@property (nonatomic, copy) NSString *contentUrlString;
+@property (nonatomic, assign) BOOL shouldAutoPlay;
 @end
 
 @implementation KKAVPlayer
@@ -54,6 +60,69 @@
 }
 
 /////////////////// 初始化, 自定义 UI ///////////////////////
+
+- (instancetype)initWithContainerView:(UIView *)containerView autoPlay:(BOOL)autoPlay contentUrl:(NSString *)urlString {
+    self = [super initWithFrame:containerView.bounds];
+    if (self) {
+        //initSubViews
+        [self initSubViews];
+        //设置容器, url
+        self.containerView = containerView;
+        [self.containerView addSubview:self];
+        self.shouldAutoPlay = autoPlay;
+        self.contentUrlString = urlString;
+    }
+    return self;
+}
+
+//添加子控件
+- (void)initSubViews {
+    //base
+    self.backgroundColor = [UIColor blackColor];
+    UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapView)];
+    [self addGestureRecognizer:tap];
+    self.isFullscreenMode = NO;
+    //bottomBar
+    self.bottomBar = [[UIView alloc] init];
+    [self addSubview:self.bottomBar];
+    self.showBottomBar = YES;
+    //playButton
+    self.stateButton = [[UIButton alloc] init];
+    [self.stateButton setImage:[UIImage imageNamed:@"kk_play_small"] forState:UIControlStateNormal];
+    [self.stateButton setImage:[UIImage imageNamed:@"kk_pause_small"] forState:UIControlStateSelected];
+    self.stateButton.imageView.contentMode = UIViewContentModeScaleAspectFit;
+    [self.stateButton addTarget:self action:@selector(stateButtonTouched:) forControlEvents:UIControlEventTouchUpInside];
+    self.stateButton.enabled = NO;
+    [self.bottomBar addSubview:self.stateButton];
+    //progressTimeLabel
+    self.progressTimeLabel = [[UILabel alloc] init];
+    self.progressTimeLabel.textAlignment = NSTextAlignmentCenter;
+    self.progressTimeLabel.font = [UIFont systemFontOfSize:12];
+    self.progressTimeLabel.textColor = [UIColor whiteColor];
+    self.progressTimeLabel.text = @"00:00";
+    [self.bottomBar addSubview:self.progressTimeLabel];
+    //progerssView
+    self.videoProgress = [[UIProgressView alloc] init];
+    self.videoProgress.progressTintColor = [UIColor colorWithRed:221/255.0 green:21/255.0 blue:105/255.0 alpha:1.0];
+    [self.bottomBar addSubview:self.videoProgress];
+    //slider
+    self.videoSlider = [[UISlider alloc] init];
+    [self.videoSlider setThumbImage:[UIImage imageNamed:@"kk_slider_small"] forState:UIControlStateNormal];
+    [self.bottomBar addSubview:self.videoSlider];
+    //totalTimeLabel
+    self.totalTimeLabel = [[UILabel alloc] init];
+    self.totalTimeLabel.textAlignment = NSTextAlignmentCenter;
+    self.totalTimeLabel.font = [UIFont systemFontOfSize:12];
+    self.totalTimeLabel.textColor = [UIColor whiteColor];
+    self.totalTimeLabel.text = @"00:00";
+    [self.bottomBar addSubview:self.totalTimeLabel];
+    //fullScreenButton
+    self.fullScreenButton = [[UIButton alloc] init];
+    [self.fullScreenButton setImage:[UIImage imageNamed:@"kk_full_screen"] forState:UIControlStateNormal];
+    [self.fullScreenButton addTarget:self action:@selector(fullScreen) forControlEvents:UIControlEventTouchUpInside];
+    [self.bottomBar addSubview:self.fullScreenButton];
+}
+
 
 - (void)setContentUrlString:(NSString *)contentUrlString {
     // playerItem, 播放资源
@@ -74,59 +143,8 @@
     __weak typeof(self) weakSelf = self;
     [self.player seekToTime:kCMTimeZero completionHandler:^(BOOL finished) {
         [weakSelf.videoSlider setValue:0.0 animated:YES];
-        [weakSelf.stateButton setTitle:@"Play" forState:UIControlStateNormal];
+        weakSelf.stateButton.selected = NO;
     }];
-}
-
-- (instancetype)initWithFrame:(CGRect)frame {
-    self = [super initWithFrame:frame];
-    if (self) {
-        //base
-        self.backgroundColor = [UIColor blackColor];
-        UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapView)];
-        [self addGestureRecognizer:tap];
-        self.isFullscreenMode = NO;
-        //bottomBar
-        self.bottomBar = [[UIView alloc] init];
-        [self addSubview:self.bottomBar];
-        self.showBottomBar = YES;
-        //playButton
-        self.stateButton = [[UIButton alloc] init];
-        [self.stateButton setTitle:@"Play" forState:UIControlStateNormal];
-        [self.stateButton setTitleColor:[UIColor redColor] forState:UIControlStateNormal];
-        [self.stateButton addTarget:self action:@selector(stateButtonTouched:) forControlEvents:UIControlEventTouchUpInside];
-        self.stateButton.enabled = NO;
-        [self.bottomBar addSubview:self.stateButton];
-        //progressTimeLabel
-        self.progressTimeLabel = [[UILabel alloc] init];
-        self.progressTimeLabel.textAlignment = NSTextAlignmentCenter;
-        self.progressTimeLabel.font = [UIFont systemFontOfSize:12];
-        self.progressTimeLabel.textColor = [UIColor whiteColor];
-        self.progressTimeLabel.text = @"00:00";
-        [self.bottomBar addSubview:self.progressTimeLabel];
-        //progerssView
-        self.videoProgress = [[UIProgressView alloc] init];
-        self.videoProgress.progressTintColor = [UIColor colorWithRed:221/255.0 green:21/255.0 blue:105/255.0 alpha:1.0];
-        [self.bottomBar addSubview:self.videoProgress];
-        //slider
-        self.videoSlider = [[UISlider alloc] init];
-        [self.videoSlider setThumbImage:[self imageWithColor:[UIColor colorWithRed:223/255.0 green:32/255.0 blue:117/255.0 alpha:1.0]] forState:UIControlStateNormal];
-        [self.bottomBar addSubview:self.videoSlider];
-        //totalTimeLabel
-        self.totalTimeLabel = [[UILabel alloc] init];
-        self.totalTimeLabel.textAlignment = NSTextAlignmentCenter;
-        self.totalTimeLabel.font = [UIFont systemFontOfSize:12];
-        self.totalTimeLabel.textColor = [UIColor whiteColor];
-        self.totalTimeLabel.text = @"00:00";
-        [self.bottomBar addSubview:self.totalTimeLabel];
-        //fullScreenButton
-        self.fullScreenButton = [[UIButton alloc] init];
-        [self.fullScreenButton setTitle:@"全屏" forState:UIControlStateNormal];
-        [self.fullScreenButton setTitleColor:[UIColor redColor] forState:UIControlStateNormal];
-        [self.fullScreenButton addTarget:self action:@selector(fullScreen) forControlEvents:UIControlEventTouchUpInside];
-        [self.bottomBar addSubview:self.fullScreenButton];
-    }
-    return self;
 }
 
 - (void)layoutSubviews {
@@ -147,7 +165,6 @@
     AVPlayerItem *playerItem = (AVPlayerItem *)object;
     if ([keyPath isEqualToString:@"status"]) {
         if ([playerItem status] == AVPlayerStatusReadyToPlay) {
-            NSLog(@"AVPlayerStatusReadyToPlay");
             self.stateButton.enabled = YES;
             CMTime duration = self.playerItem.duration;// 获取视频总长度
             CGFloat totalSecond = playerItem.duration.value / playerItem.duration.timescale;// 转换成秒
@@ -155,6 +172,10 @@
             [self customVideoSlider:duration];// 自定义UISlider外观
             NSLog(@"movie total duration:%f",CMTimeGetSeconds(duration));
             [self monitoringPlayback:self.playerItem];// 监听播放状态
+            //自动播放
+            if (self.shouldAutoPlay) {
+                [self stateButtonTouched:self.stateButton];
+            }
         } else if ([playerItem status] == AVPlayerStatusFailed) {
             NSLog(@"AVPlayerStatusFailed");
         }
@@ -217,7 +238,7 @@
 - (void)stateButtonTouched:(id)sender {
     if (!_played) {
         [self.player play];
-        [self.stateButton setTitle:@"Stop" forState:UIControlStateNormal];
+        self.stateButton.selected = YES;
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(4.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
             [UIView animateWithDuration:1.0 animations:^{
                 self.bottomBar.alpha = 0.0;
@@ -226,14 +247,33 @@
         });
     } else {
         [self.player pause];
-        [self.stateButton setTitle:@"Play" forState:UIControlStateNormal];
+        self.stateButton.selected = NO;
     }
     _played = !_played;
 }
 //全屏
 - (void)fullScreen {
-    if ([self.delegate respondsToSelector:@selector(kkAVPlayerShouldFullScreen:)]) {
-        [self.delegate kkAVPlayerShouldFullScreen:self.isFullscreenMode];
+    if (self.isFullscreenMode) {
+        [UIView animateWithDuration:0.3f animations:^{
+            [self setTransform:CGAffineTransformIdentity];
+            self.frame = self.originFrame;
+            [self.containerView addSubview:self];
+        } completion:^(BOOL finished) {
+            self.isFullscreenMode = NO;
+        }];
+    } else {
+        self.originFrame = self.frame;
+        CGFloat height = [[UIScreen mainScreen] bounds].size.width;
+        CGFloat width = [[UIScreen mainScreen] bounds].size.height;
+        CGRect frame = CGRectMake((height - width) / 2, (width - height) / 2, width, height);
+        [UIView animateWithDuration:0.3f animations:^{
+            self.frame = frame;
+            [self setTransform:CGAffineTransformMakeRotation(M_PI_2)];
+            [[UIApplication sharedApplication].keyWindow addSubview:self];
+            [[UIApplication sharedApplication].keyWindow bringSubviewToFront:self];
+        } completion:^(BOOL finished) {
+            self.isFullscreenMode = YES;
+        }];
     }
 }
 
@@ -268,20 +308,6 @@
     [self.playerItem removeObserver:self forKeyPath:@"loadedTimeRanges" context:nil];
     [[NSNotificationCenter defaultCenter] removeObserver:self name:AVPlayerItemDidPlayToEndTimeNotification object:self.playerItem];
     [self.player removeTimeObserver:self.playbackTimeObserver];
-}
-
-- (UIImage *)imageWithColor:(UIColor *)color {
-    CGRect rect = CGRectMake(0.0f, 0.0f, 12.0f, 12.0f);
-    UIGraphicsBeginImageContext(rect.size);
-    CGContextRef context = UIGraphicsGetCurrentContext();
-    
-    CGContextSetFillColorWithColor(context, [color CGColor]);
-    CGContextFillRect(context, rect);
-    
-    UIImage *image = UIGraphicsGetImageFromCurrentImageContext();
-    UIGraphicsEndImageContext();
-    
-    return image;
 }
 
 @end

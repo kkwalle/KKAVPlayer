@@ -8,12 +8,6 @@
 
 #import <UIKit/UIKit.h>
 
-@protocol KKAVPlayerDelegate <NSObject>
-- (void)kkAVPlayerShouldFullScreen:(BOOL)shouldFullScreen;
-@end
-
 @interface KKAVPlayer : UIView
-@property (nonatomic, copy) NSString *contentUrlString;
-@property (nonatomic, assign) id<KKAVPlayerDelegate> delegate;
-@property (nonatomic, assign) BOOL isFullscreenMode;
+- (instancetype)initWithContainerView:(UIView *)containerView autoPlay:(BOOL)autoPlay contentUrl:(NSString *)urlString;
 @end
