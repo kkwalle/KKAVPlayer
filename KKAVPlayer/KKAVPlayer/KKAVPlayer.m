@@ -108,6 +108,8 @@
     //slider
     self.videoSlider = [[UISlider alloc] init];
     [self.videoSlider setThumbImage:[UIImage imageNamed:@"kk_slider_small"] forState:UIControlStateNormal];
+    self.videoSlider.userInteractionEnabled = YES;
+    [self.videoSlider addTarget:self action:@selector(videoSlierChangeValueEnd:) forControlEvents:UIControlEventValueChanged];
     [self.bottomBar addSubview:self.videoSlider];
     //totalTimeLabel
     self.totalTimeLabel = [[UILabel alloc] init];
@@ -144,6 +146,35 @@
     [self.player seekToTime:kCMTimeZero completionHandler:^(BOOL finished) {
         [weakSelf.videoSlider setValue:0.0 animated:YES];
         weakSelf.stateButton.selected = NO;
+        _played = NO;
+        //展示重新播放按钮
+        UIButton *rePlayButton = [[UIButton alloc] initWithFrame:self.bounds];
+        UIImage *image;
+        if (self.isFullscreenMode) {
+            image = [UIImage imageNamed:@"kk_replay_big"];
+        } else {
+            image = [UIImage imageNamed:@"kk_replay_small"];
+        }
+        [rePlayButton setImage:image forState:UIControlStateNormal];
+        [rePlayButton addTarget:self action:@selector(rePlay:) forControlEvents:UIControlEventTouchUpInside];
+        [self addSubview:rePlayButton];
+    }];
+}
+
+- (void)rePlay:(UIButton *)button {
+    [button removeFromSuperview];
+    [self stateButtonTouched:self.stateButton];
+}
+
+- (void)videoSlierChangeValueEnd:(id)sender {
+    UISlider *slider = (UISlider *)sender;
+    NSLog(@"value end:%f",slider.value);
+    CMTime changedTime = CMTimeMakeWithSeconds(slider.value, 1);
+    
+    __weak typeof(self) weakSelf = self;
+    [self.player seekToTime:changedTime completionHandler:^(BOOL finished) {
+        [weakSelf.player play];
+        self.stateButton.selected = YES;
     }];
 }
 
