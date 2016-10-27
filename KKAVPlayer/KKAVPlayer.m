@@ -37,7 +37,6 @@
 @property (nonatomic ,strong) id playbackTimeObserver;
 @property (nonatomic, assign) BOOL played;
 @property (nonatomic, assign) BOOL showBottomBar;
-@property (nonatomic, assign) BOOL isFullscreenMode;
 @property (nonatomic, assign) CGRect originFrame;
 @end
 
@@ -233,33 +232,8 @@
 }
 //全屏
 - (void)fullScreen {
-    if (self.isFullscreenMode) {
-        [UIView animateWithDuration:0.3f animations:^{
-            [self setTransform:CGAffineTransformIdentity];
-            self.frame = self.originFrame;
-        } completion:^(BOOL finished) {
-            self.isFullscreenMode = NO;
-            if ([self.superview isKindOfClass:[UITableView class]]) {
-                UITableView *tableView = (UITableView *)self.superview;
-                tableView.scrollEnabled = YES;
-            }
-        }];
-    } else {
-        self.originFrame = self.frame;
-        CGFloat height = [[UIScreen mainScreen] bounds].size.width;
-        CGFloat width = [[UIScreen mainScreen] bounds].size.height;
-        CGRect frame = CGRectMake((height - width) / 2, (width - height) / 2, width, height);
-        [UIView animateWithDuration:0.3f animations:^{
-            self.frame = frame;
-            [self setTransform:CGAffineTransformMakeRotation(M_PI_2)];
-            [[UIApplication sharedApplication].keyWindow bringSubviewToFront:self];
-        } completion:^(BOOL finished) {
-            self.isFullscreenMode = YES;
-            if ([self.superview isKindOfClass:[UITableView class]]) {
-                UITableView *tableView = (UITableView *)self.superview;
-                tableView.scrollEnabled = NO;
-            }
-        }];
+    if ([self.delegate respondsToSelector:@selector(kkAVPlayerShouldFullScreen:)]) {
+        [self.delegate kkAVPlayerShouldFullScreen:self.isFullscreenMode];
     }
 }
 
