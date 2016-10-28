@@ -9,8 +9,7 @@
 #import <UIKit/UIKit.h>
 
 @interface KKAVPlayer : UIView
-@property (nonatomic, weak) UIView *containerView;
 - (instancetype)initWithContainerView:(UIView *)containerView autoPlay:(BOOL)autoPlay contentUrl:(NSString *)urlString;
-- (void)play;
-- (void)pause;
+//containerView 的父容器为 scrollView 类型, 此设置有效
+@property (nonatomic, assign) BOOL shouldPauseWhenOutOfScreen;
 @end

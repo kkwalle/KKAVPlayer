@@ -12,7 +12,7 @@
 #import <AVFoundation/AVPlayer.h>
 #import <AVFoundation/AVPlayerItem.h>
 
-@interface KKAVPlayer()
+@interface KKAVPlayer() <UIScrollViewDelegate>
 //@property (nonatomic, strong) AVPlayer *player;
 @property (nonatomic, strong) AVPlayer *player;
 @property (nonatomic, strong) AVPlayerViewController *playerC;
@@ -40,7 +40,8 @@
 @property (nonatomic, assign) CGRect originFrame;
 @property (nonatomic, assign) BOOL isFullscreenMode;
 
-//容器,url,
+//容器,url
+@property (nonatomic, weak) UIView *containerView;
 @property (nonatomic, copy) NSString *contentUrlString;
 @property (nonatomic, assign) BOOL shouldAutoPlay;
 @end
@@ -68,6 +69,10 @@
         //设置容器, url
         self.containerView = containerView;
         [self.containerView addSubview:self];
+        if ([self.containerView.superview isKindOfClass:[UIScrollView class]]) {
+            UIScrollView *scrollView = (UIScrollView *)self.containerView.superview;
+            scrollView.delegate = self;
+        }
         self.shouldAutoPlay = autoPlay;
         self.contentUrlString = urlString;
     }
@@ -357,5 +362,16 @@
     [[NSNotificationCenter defaultCenter] removeObserver:self name:AVPlayerItemDidPlayToEndTimeNotification object:self.playerItem];
     [self.player removeTimeObserver:self.playbackTimeObserver];
 }
+
+//滚动出屏幕, 暂停播放
+- (void)scrollViewDidScroll:(UIScrollView *)scrollView {
+    if (self.shouldPauseWhenOutOfScreen) {
+        CGRect screenRect = [self.containerView convertRect:self.containerView.bounds toView:[UIApplication sharedApplication].keyWindow];
+        if (screenRect.origin.y <= -screenRect.size.height) {
+            [self pause];
+        }
+    }
+}
+
 
 @end
