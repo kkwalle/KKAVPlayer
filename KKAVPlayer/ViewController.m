@@ -43,4 +43,12 @@
     return cell;
 }
 
+- (void)scrollViewDidScroll:(UIScrollView *)scrollView {
+    CGRect screenRect = [self.playerView.containerView convertRect:self.playerView.containerView.bounds toView:[UIApplication sharedApplication].keyWindow];
+    NSLog(@"%@==", NSStringFromCGRect(screenRect));
+    if (screenRect.origin.y <= -screenRect.size.height) {
+        [self.playerView pause];
+    }
+}
+
 @end

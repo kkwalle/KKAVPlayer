@@ -41,7 +41,6 @@
 @property (nonatomic, assign) BOOL isFullscreenMode;
 
 //容器,url,
-@property (nonatomic, strong) UIView *containerView;
 @property (nonatomic, copy) NSString *contentUrlString;
 @property (nonatomic, assign) BOOL shouldAutoPlay;
 @end
@@ -265,11 +264,10 @@
     return result;
 }
 
-//播放
+//播放 / 暂停, 点击左下角按钮切换状态
 - (void)stateButtonTouched:(id)sender {
     if (!_played) {
-        [self.player play];
-        self.stateButton.selected = YES;
+        [self play];
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(4.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
             [UIView animateWithDuration:1.0 animations:^{
                 self.bottomBar.alpha = 0.0;
@@ -277,11 +275,30 @@
             }];
         });
     } else {
+        //暂停
+        [self pause];
+    }
+}
+
+
+//播放
+- (void)play {
+    if (!_played) {
+        [self.player play];
+        self.stateButton.selected = YES;
+        _played = YES;
+    }
+}
+//暂停
+- (void)pause {
+    if (_played) {
         [self.player pause];
         self.stateButton.selected = NO;
+        _played = NO;
     }
-    _played = !_played;
 }
+
+
 //全屏
 - (void)fullScreen {
     if (self.isFullscreenMode) {
